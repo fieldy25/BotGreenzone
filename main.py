@@ -23,10 +23,7 @@ intents.members = True
 
 GUILD_ID = 692383463206027304
 
-# ปิด default help command
-client = commands.Bot(command_prefix="!", intents=intents, help_command=None)
-client.remove_command("help")
-
+# ใช้ instance เดียวจาก MyClient เท่านั้น (ปิด default help command)
 class MyClient(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents, help_command=None)
@@ -34,7 +31,7 @@ class MyClient(commands.Bot):
     async def setup_hook(self):
         try:
             guild = discord.Object(id=GUILD_ID)
-            # Sync คำสั่งเฉพาะใน guild
+            # Sync คำสั่งเฉพาะใน guild นี้
             synced = await self.tree.sync(guild=guild)
             logger.info(f"คำสั่ง Slash Sync สำหรับ guild สำเร็จ! (ซิงค์ {len(synced)} คำสั่ง)")
         except Exception as e:
@@ -71,50 +68,8 @@ async def on_message(message):
 
     await client.process_commands(message)
 
-# /bothelp
-@client.tree.command(name="bothelp", description="แสดงรายการคำสั่งทั้งหมด", guild=discord.Object(id=GUILD_ID))
-async def bothelp(interaction: discord.Interaction):
-    try:
-        embed = discord.Embed(
-            title="🧩 คำสั่งของบอท",
-            description="นี่คือรายการคำสั่งที่สามารถใช้ได้:",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="/roll", value="ทอยเต๋า 1-6", inline=False)
-        embed.add_field(name="/coinflip", value="เสี่ยงหัว-ก้อย", inline=False)
-        embed.add_field(name="/mute", value="Mute สมาชิก (เลือกเป็นวินาทีหรือเป็นนาที)", inline=False)
-        embed.add_field(name="/unmute", value="ปลด mute สมาชิก", inline=False)
-        embed.add_field(name="/mutestatus", value="แสดงเวลาที่เหลือของ mute สำหรับสมาชิก", inline=False)
-        embed.add_field(name="/8ball", value="ถามคำถามแล้วรับคำตอบแบบสุ่ม", inline=False)
-        embed.set_footer(text="โดยบอทของคุณ ❤️")
-        logger.info(f"/bothelp: ผู้ใช้ {interaction.user} ขอแสดงรายการคำสั่ง")
-        await interaction.response.send_message(embed=embed)
-    except Exception as e:
-        logger.exception("เกิดข้อผิดพลาดใน /bothelp")
-        await interaction.response.send_message("เกิดข้อผิดพลาดในคำสั่ง help", ephemeral=True)
-
-# /roll
-@client.tree.command(name="roll", description="ทอยเต๋า 1-6", guild=discord.Object(id=GUILD_ID))
-async def roll(interaction: discord.Interaction):
-    try:
-        num = random.randint(1, 6)
-        logger.info(f"/roll: ผู้ใช้ {interaction.user} ได้เลข {num}")
-        await interaction.response.send_message(f"🎲 คุณได้เลข **{num}**")
-    except Exception as e:
-        logger.exception("เกิดข้อผิดพลาดใน /roll")
-
-# /coinflip
-@client.tree.command(name="coinflip", description="เสี่ยงหัว-ก้อย", guild=discord.Object(id=GUILD_ID))
-async def coinflip(interaction: discord.Interaction):
-    try:
-        result = random.choice(["หัว", "ก้อย"])
-        logger.info(f"/coinflip: ผู้ใช้ {interaction.user} ได้ผล {result}")
-        await interaction.response.send_message(f"🪙 ออก **{result}**")
-    except Exception as e:
-        logger.exception("เกิดข้อผิดพลาดใน /coinflip")
-
-# /mute
-@client.tree.command(name="mute", description="Mute สมาชิกในเซิร์ฟเวอร์ (ทั้งข้อความและเสียง) เป็นระยะเวลาที่ระบุ", guild=discord.Object(id=GUILD_ID))
+# /mute - mute สมาชิกตามระยะเวลาที่ระบุ (เลือกระหว่าง วินาที กับ นาที)
+@client.tree.command(name="mute", description="Mute สมาชิกในเซิร์ฟเวอร์เป็นระยะเวลาที่ระบุ", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(
     member="สมาชิกที่ต้องการ mute",
     duration="ระยะเวลา (ตัวเลข)",
@@ -132,6 +87,7 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
             logger.warning(f"/mute: ผู้ใช้ {interaction.user} ไม่มีสิทธิ์")
             return
 
+        # คำนวณเป็นวินาที
         if unit == "m":
             seconds = duration * 60
         elif unit == "s":
@@ -143,18 +99,22 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
 
         until = discord.utils.utcnow() + datetime.timedelta(seconds=seconds)
         
+        # รับ full member object จาก guild
         full_member = interaction.guild.get_member(member.id)
         if full_member is None:
             full_member = await interaction.guild.fetch_member(member.id)
         
+        # ใช้เมธอด timeout แบบ positional argument (ส่ง until)
         await full_member.timeout(until)
-        await interaction.response.send_message(f"สมาชิก {member.mention} ถูก mute เป็นเวลา {duration} {'นาที' if unit == 'm' else 'วินาที'}.")
+        await interaction.response.send_message(
+            f"สมาชิก {member.mention} ถูก mute เป็นเวลา {duration} {'นาที' if unit=='m' else 'วินาที'}."
+        )
         logger.info(f"/mute: mute สำเร็จสำหรับ {member}")
     except Exception as e:
         logger.exception("เกิดข้อผิดพลาดใน /mute")
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
-# /unmute
+# /unmute - ปลด mute สมาชิก
 @client.tree.command(name="unmute", description="ปลด mute สมาชิก", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(member="สมาชิกที่ต้องการปลด mute")
 async def unmute(interaction: discord.Interaction, member: discord.Member):
@@ -170,7 +130,7 @@ async def unmute(interaction: discord.Interaction, member: discord.Member):
         logger.exception("เกิดข้อผิดพลาดใน /unmute")
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
-# /mutestatus
+# /mutestatus - แสดงเวลาที่เหลือของ mute สำหรับสมาชิก
 @client.tree.command(name="mutestatus", description="แสดงเวลาที่เหลือของ mute สำหรับสมาชิก", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(member="สมาชิกที่ต้องการดูสถานะ mute")
 async def mutestatus(interaction: discord.Interaction, member: discord.Member):
@@ -196,7 +156,7 @@ async def mutestatus(interaction: discord.Interaction, member: discord.Member):
         logger.exception("เกิดข้อผิดพลาดใน /mutestatus")
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
-# /duel
+# /duel - ให้สมาชิกสองคนมาสู้กันและสุ่มผู้ชนะ
 @client.tree.command(name="duel", description="ให้สมาชิกสองคนมาสู้กันและสุ่มผู้ชนะ", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(
     member1="สมาชิกคนแรก",
@@ -223,7 +183,7 @@ async def duel(interaction: discord.Interaction, member1: discord.Member, member
         logger.exception("เกิดข้อผิดพลาดใน /duel")
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
-# /8ball
+# /8ball - ถามคำถามแล้วรับคำตอบแบบสุ่ม
 @client.tree.command(name="8ball", description="ถามคำถามแล้วรับคำตอบแบบสุ่ม", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(question="คำถามของคุณ")
 async def eight_ball(interaction: discord.Interaction, question: str):
