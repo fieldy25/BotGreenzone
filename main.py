@@ -20,16 +20,17 @@ logger = logging.getLogger("BotGreenzone")
 intents = discord.Intents.default()
 intents.message_content = True  # ใช้สำหรับข้อความ text commands
 
-# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot (ไม่ต้องสร้าง tree ใหม่)
+# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot (จะมี process_commands อยู่แล้ว)
 class MyClient(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
-        # ไม่ต้องกำหนด self.tree ใหม่ เพราะ commands.Bot มีอยู่แล้ว
+        # ไม่ต้อง reassign self.tree เพราะ commands.Bot มี command tree ในตัวอยู่แล้ว
 
     async def setup_hook(self):
         try:
-            # ระบุ Guild ID สำหรับทดสอบ
+            # ระบุ Guild ID สำหรับทดสอบ (ใช้ Developer Mode คัดลอก ID ของเซิร์ฟเวอร์)
             guild = discord.Object(id=692383463206027304)  # เปลี่ยนเป็น Guild ID ที่ถูกต้อง
+            # ซิงค์ Slash Commands สำหรับเซิร์ฟเวอร์นี้
             synced = await self.tree.sync(guild=guild)
             logger.info(f"คำสั่ง Slash Sync สำหรับ guild สำเร็จ! (ซิงค์ {len(synced)} คำสั่ง)")
         except Exception as e:
