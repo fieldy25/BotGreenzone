@@ -27,10 +27,14 @@ class MyClient(discord.Client):
     
     async def setup_hook(self):
         try:
+            # แสดงคำสั่งที่มีอยู่ใน tree ก่อน sync
+            logger.info(f"Before sync, commands in tree: {self.tree.commands}")
             # ระบุ Guild ID สำหรับทดสอบ (ใช้ Developer Mode คัดลอก ID ของเซิร์ฟเวอร์)
             guild = discord.Object(id=692383463206027304)  # เปลี่ยนเป็น Guild ID ที่ถูกต้อง
             synced = await self.tree.sync(guild=guild)
             logger.info(f"คำสั่ง Slash Sync สำหรับ guild สำเร็จ! (ซิงค์ {len(synced)} คำสั่ง)")
+            # แสดงคำสั่งที่ได้หลังการ sync
+            logger.info(f"After sync, commands in tree: {self.tree.commands}")
         except Exception as e:
             logger.exception("เกิดข้อผิดพลาดใน setup_hook")
 
@@ -63,7 +67,7 @@ async def on_message(message):
     except Exception as e:
         logger.exception("เกิดข้อผิดพลาดใน on_message")
 
-    # อย่าลืมให้บอทประมวลผลคำสั่งอื่น ๆ ต่อไป
+    # ประมวลผลคำสั่งอื่น ๆ ต่อไป
     await client.process_commands(message)
 
 # Slash Command: /roll
@@ -116,13 +120,11 @@ async def help_command(interaction: discord.Interaction):
 async def mute(interaction: discord.Interaction, member: discord.Member, duration: int, unit: str):
     try:
         logger.info(f"/mute: ผู้ใช้ {interaction.user} พยายาม mute {member} เป็นเวลา {duration} {unit}")
-        # ตรวจสอบสิทธิ์ของผู้ใช้ที่เรียกใช้คำสั่ง (Moderate Members ต้องเปิดใช้งาน)
         if not interaction.user.guild_permissions.moderate_members:
             await interaction.response.send_message("คุณไม่มีสิทธิ์ใช้คำสั่งนี้", ephemeral=True)
             logger.warning(f"/mute: ผู้ใช้ {interaction.user} ไม่มีสิทธิ์")
             return
 
-        # แปลงหน่วยเวลาเป็นวินาที
         if unit.lower() in ["minute", "minutes", "m"]:
             seconds = duration * 60
         elif unit.lower() in ["second", "seconds", "s"]:
@@ -132,7 +134,6 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
             logger.warning(f"/mute: ผู้ใช้ {interaction.user} ระบุหน่วยเวลาไม่ถูกต้อง")
             return
 
-        # คำนวณเวลา timeout โดยใช้เวลาปัจจุบัน + ระยะเวลา
         until = discord.utils.utcnow() + datetime.timedelta(seconds=seconds)
         await member.edit(timeout=until)
         await interaction.response.send_message(f"สมาชิก {member.mention} ถูก mute เป็นเวลา {duration} {unit}.")
