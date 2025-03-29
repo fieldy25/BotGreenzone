@@ -29,6 +29,22 @@ async def on_ready():
     print(f"✅ บอท {client.user} พร้อมใช้งานแล้ว!")
 
 # ---------------------- Command bot ----------------------------- #
+# on_message event เพื่อตอบกลับเมื่อผู้ใช้พิมพ์ "ข้อความที่ระบุ"
+@client.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    if message.content.strip() == "ใคร":
+        await message.channel.send("เหมือน")
+    if message.content.strip() == "กิกี้":
+        await message.channel.send("เด็กอ้วน")
+    if message.content.strip() == "ตอง":
+        await message.channel.send("ขาใหญ่")
+    if message.content.strip() == "หมู":
+        await message.channel.send("ตอง")
+    # อย่าลืมให้บอทประมวลผลคำสั่งอื่น ๆ ต่อไป
+    await client.process_commands(message)
 
 # Slash Command: /roll
 @client.tree.command(name="roll", description="ทอยเต๋า 1-6")
