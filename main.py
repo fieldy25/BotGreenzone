@@ -68,6 +68,27 @@ async def on_message(message):
 
     await client.process_commands(message)
 
+# /help
+@client.tree.command(name="help", description="แสดงรายการคำสั่งทั้งหมด", guild=discord.Object(id=GUILD_ID))
+async def bothelp(interaction: discord.Interaction):
+    try:
+        embed = discord.Embed(
+            title="🧩 คำสั่งของบอท",
+            description="นี่คือรายการคำสั่งที่สามารถใช้ได้:",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="/8ball", value="ถามคำถามแล้วรับคำตอบแบบสุ่ม", inline=False)
+        embed.add_field(name="/duel", value="ให้สมาชิก 1vs1 แล้วหาคนที่ไม่กระจอก", inline=False)
+        embed.add_field(name="/mute", value="Mute สมาชิก (เลือกเป็นวินาทีหรือเป็นนาที)", inline=False)
+        embed.add_field(name="/mutestatus", value="แสดงเวลาที่เหลือของ mute สำหรับสมาชิก", inline=False)
+        embed.add_field(name="/unmute", value="ปลด mute สมาชิก", inline=False)
+        embed.set_footer(text="โดยฟิวส์ดี้ ❤️")
+        logger.info(f"/bothelp: ผู้ใช้ {interaction.user} ขอแสดงรายการคำสั่ง")
+        await interaction.response.send_message(embed=embed)
+    except Exception as e:
+        logger.exception("เกิดข้อผิดพลาดใน /bothelp")
+        await interaction.response.send_message("เกิดข้อผิดพลาดในคำสั่ง help", ephemeral=True)
+
 # /mute - mute สมาชิกตามระยะเวลาที่ระบุ (เลือกระหว่าง วินาที กับ นาที)
 @client.tree.command(name="mute", description="Mute สมาชิกในเซิร์ฟเวอร์เป็นระยะเวลาที่ระบุ", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(
