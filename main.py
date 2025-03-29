@@ -49,8 +49,9 @@ async def on_message(message):
 # Slash Command: /roll
 @client.tree.command(name="roll", description="ทอยเต๋า 1-6")
 async def roll(interaction: discord.Interaction):
+    await interaction.response.defer()  # ยืนยันรับ interaction ทันที
     num = random.randint(1, 6)
-    await interaction.response.send_message(f"🎲 คุณได้เลข **{num}**")
+    await interaction.followup.send(f"🎲 คุณได้เลข **{num}**")
 
 # Slash Command: /coinflip
 @client.tree.command(name="coinflip", description="เสี่ยงหัว-ก้อย")
