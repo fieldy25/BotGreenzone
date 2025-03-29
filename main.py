@@ -1,6 +1,7 @@
 import os
 import discord
-from discord.ext import commands, app_commands
+from discord.ext import commands
+from discord import app_commands
 import random
 import datetime
 import logging
