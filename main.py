@@ -87,7 +87,8 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
     except Exception as e:
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
-server_on
+# เรียกใช้งาน Flask server (เพื่อให้แอปไม่หลับ)
+server_on()
 
 bot.run(os.getenv('TOKEN'))
 
