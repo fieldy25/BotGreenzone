@@ -16,25 +16,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("BotGreenzone")
 
-# กำหนด Intents (ต้องเปิด voice_states ด้วยเพื่อรับ event ห้องพูดคุย)
+# กำหนด Intents
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-intents.voice_states = True
 
 GUILD_ID = 692383463206027304
-
-def add_xp(user_id, amount):
-    if user_id not in levels:
-        levels[user_id] = {"xp": 0, "level": 0}
-    levels[user_id]["xp"] += amount
-    current_level = levels[user_id]["level"]
-    # กำหนด threshold (xp ที่ต้องการสำหรับเลเวลถัดไป) โดยที่แต่ละเลเวลต้องการ 100 * (level+1) xp
-    threshold = 100 * (current_level + 1)
-    if levels[user_id]["xp"] >= threshold:
-        levels[user_id]["level"] += 1
-        return True, levels[user_id]["level"]
-    return False, levels[user_id]["level"]
 
 # ใช้ instance เดียวจาก MyClient เท่านั้น (ปิด default help command)
 class MyClient(commands.Bot):
@@ -61,14 +48,7 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # เมื่อผู้ใช้พิมพ์ข้อความ เพิ่ม XP แบบสุ่ม (เช่น 5-10 XP)
-    xp_gain = random.randint(5, 10)
-    leveled_up, new_level = add_xp(message.author.id, xp_gain)
-    if leveled_up:
-        try:
-            await message.channel.send(f"🎉 {message.author.mention} คุณเลเวลขึ้นเป็นระดับ {new_level} แล้ว!")
-        except Exception as e:
-            logger.exception("ไม่สามารถส่งข้อความแจ้งเตือนเลเวลอัพได้")
+    logger.info(f"on_message: Received message from {message.author}: {message.content}")
 
     try:
         if message.content.strip() == "ใคร":
@@ -88,30 +68,26 @@ async def on_message(message):
 
     await client.process_commands(message)
 
-# เมื่อสมาชิกเข้าห้องพูดคุย (Voice Channel) เพิ่ม XP แบบสุ่ม (เช่น 10-20 XP)
-@client.event
-async def on_voice_state_update(member, before, after):
-    if before.channel is None and after.channel is not None:
-        xp_gain = random.randint(10, 20)
-        leveled_up, new_level = add_xp(member.id, xp_gain)
-        if leveled_up:
-            try:
-                await member.send(f"🎉 คุณเลเวลขึ้นเป็นระดับ {new_level} แล้ว!")
-            except Exception as e:
-                logger.exception("ไม่สามารถส่ง DM แจ้งเตือนเลเวลอัพได้")
-
-# Slash command: /level - ให้ผู้ใช้ตรวจสอบเลเวลและ XP ของตนเอง
-@client.tree.command(name="level", description="ดูเลเวลและ XP ของคุณ", guild=discord.Object(id=GUILD_ID))
-async def level(interaction: discord.Interaction):
-    user_id = interaction.user.id
-    if user_id not in levels:
-        levels[user_id] = {"xp": 0, "level": 0}
-    xp = levels[user_id]["xp"]
-    lvl = levels[user_id]["level"]
-    next_threshold = 100 * (lvl + 1)
-    await interaction.response.send_message(
-        f"{interaction.user.mention} คุณอยู่ระดับ {lvl} (XP: {xp}/{next_threshold})"
-    )
+# /help
+@client.tree.command(name="help", description="แสดงรายการคำสั่งทั้งหมด", guild=discord.Object(id=GUILD_ID))
+async def bothelp(interaction: discord.Interaction):
+    try:
+        embed = discord.Embed(
+            title="🧩 คำสั่งของบอท",
+            description="นี่คือรายการคำสั่งที่สามารถใช้ได้:",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="/8ball", value="ถามคำถามแล้วรับคำตอบแบบสุ่ม", inline=False)
+        embed.add_field(name="/duel", value="ให้สมาชิก 1vs1 แล้วหาคนที่ไม่กระจอก", inline=False)
+        embed.add_field(name="/mute", value="Mute สมาชิก (เลือกเป็นวินาทีหรือเป็นนาที)", inline=False)
+        embed.add_field(name="/mutestatus", value="แสดงเวลาที่เหลือของ mute สำหรับสมาชิก", inline=False)
+        embed.add_field(name="/unmute", value="ปลด mute สมาชิก", inline=False)
+        embed.set_footer(text="โดยฟิวส์ดี้ ❤️")
+        logger.info(f"/bothelp: ผู้ใช้ {interaction.user} ขอแสดงรายการคำสั่ง")
+        await interaction.response.send_message(embed=embed)
+    except Exception as e:
+        logger.exception("เกิดข้อผิดพลาดใน /bothelp")
+        await interaction.response.send_message("เกิดข้อผิดพลาดในคำสั่ง help", ephemeral=True)
 
 # /mute - mute สมาชิกตามระยะเวลาที่ระบุ (เลือกระหว่าง วินาที กับ นาที)
 @client.tree.command(name="mute", description="Mute สมาชิกในเซิร์ฟเวอร์เป็นระยะเวลาที่ระบุ", guild=discord.Object(id=GUILD_ID))
