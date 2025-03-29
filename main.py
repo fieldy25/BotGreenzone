@@ -103,6 +103,26 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
     except Exception as e:
         await interaction.response.send_message(f"เกิดข้อผิดพลาด: {e}", ephemeral=True)
 
+# Slash Command: /duel
+@client.tree.command(name="duel", description="ให้สมาชิกสองคนมาสู้กันและสุ่มผู้ชนะ")
+@app_commands.describe(
+    member1="สมาชิกคนแรก",
+    member2="สมาชิกคนที่สอง"
+)
+async def duel(interaction: discord.Interaction, member1: discord.Member, member2: discord.Member):
+    if member1 == member2:
+        await interaction.response.send_message("ไม่สามารถให้คนเดียวกันสู้กันได้!", ephemeral=True)
+        return
+
+    winner = random.choice([member1, member2])
+    embed = discord.Embed(
+        title="⚔️ การต่อสู้เริ่มแล้ว!",
+        description=f"{member1.mention} vs {member2.mention}",
+        color=discord.Color.purple()
+    )
+    embed.add_field(name="ผู้ชนะ", value=winner.mention, inline=False)
+    await interaction.response.send_message(embed=embed)
+
 # เรียกใช้งาน Flask server (เพื่อให้แอปไม่หลับ)
 server_on()
 
