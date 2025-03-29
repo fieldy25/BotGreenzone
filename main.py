@@ -16,19 +16,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger("BotGreenzone")
 
-# กำหนด Intents (ปรับตามต้องการ)
+# กำหนด Intents
 intents = discord.Intents.default()
-intents.message_content = True  # ถ้าต้องการใช้คำสั่ง text นอก Slash
+intents.message_content = True  # ใช้สำหรับข้อความ text commands
 
-# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot
+# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot (ไม่ต้องสร้าง tree ใหม่)
 class MyClient(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
-        self.tree = app_commands.CommandTree(self)
-    
+        # ไม่ต้องกำหนด self.tree ใหม่ เพราะ commands.Bot มีอยู่แล้ว
+
     async def setup_hook(self):
         try:
-            # ระบุ Guild ID สำหรับทดสอบ (ใช้ Developer Mode คัดลอก ID ของเซิร์ฟเวอร์)
+            # ระบุ Guild ID สำหรับทดสอบ
             guild = discord.Object(id=692383463206027304)  # เปลี่ยนเป็น Guild ID ที่ถูกต้อง
             synced = await self.tree.sync(guild=guild)
             logger.info(f"คำสั่ง Slash Sync สำหรับ guild สำเร็จ! (ซิงค์ {len(synced)} คำสั่ง)")
@@ -64,6 +64,7 @@ async def on_message(message):
     except Exception as e:
         logger.exception("เกิดข้อผิดพลาดใน on_message")
 
+    # ประมวลผลคำสั่ง prefixed (เช่น !help)
     await client.process_commands(message)
 
 # Slash Command: /roll
