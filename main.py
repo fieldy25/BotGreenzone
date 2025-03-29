@@ -1,6 +1,6 @@
 import os
 import discord
-from discord import app_commands
+from discord.ext import commands, app_commands
 import random
 import datetime
 import logging
@@ -19,10 +19,11 @@ logger = logging.getLogger("BotGreenzone")
 intents = discord.Intents.default()
 intents.message_content = True  # ถ้าต้องการใช้คำสั่ง text นอก Slash
 
-# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot แทน discord.Client เพื่อรองรับ process_commands
-class MyClient(discord.ext.commands.Bot):
+# สร้างคลาสสำหรับบอทโดยใช้ commands.Bot
+class MyClient(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
+        self.tree = app_commands.CommandTree(self)
     
     async def setup_hook(self):
         try:
@@ -62,7 +63,6 @@ async def on_message(message):
     except Exception as e:
         logger.exception("เกิดข้อผิดพลาดใน on_message")
 
-    # ประมวลผลคำสั่ง prefixed (เช่น !help) ด้วย process_commands()
     await client.process_commands(message)
 
 # Slash Command: /roll
