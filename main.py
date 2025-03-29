@@ -90,5 +90,5 @@ async def mute(interaction: discord.Interaction, member: discord.Member, duratio
 # เรียกใช้งาน Flask server (เพื่อให้แอปไม่หลับ)
 server_on()
 
-bot.run(os.getenv('TOKEN'))
-
+# เรียกใช้บอทด้วย client (ไม่ใช่ bot)
+client.run(os.getenv('TOKEN'))
