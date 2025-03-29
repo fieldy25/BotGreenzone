@@ -30,8 +30,8 @@ class MyClient(commands.Bot):
         try:
             # ระบุ Guild ID สำหรับทดสอบ (ใช้ Developer Mode คัดลอก ID ของเซิร์ฟเวอร์)
             guild = discord.Object(id=692383463206027304)  # เปลี่ยนเป็น Guild ID ที่ถูกต้อง
-            # ล้างคำสั่ง Slash เก่าในเซิร์ฟเวอร์นี้ (ถ้ามี)
-            await self.tree.clear_commands(guild=guild)
+            # ล้างคำสั่ง Slash เก่าในเซิร์ฟเวอร์นี้ (ไม่ต้อง await)
+            self.tree.clear_commands(guild=guild)
             # ซิงค์ Slash Commands ใหม่สำหรับเซิร์ฟเวอร์นี้
             synced = await self.tree.sync(guild=guild)
             logger.info(f"คำสั่ง Slash Sync สำหรับ guild สำเร็จ! (ซิงค์ {len(synced)} คำสั่ง)")
