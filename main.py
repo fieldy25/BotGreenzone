@@ -21,6 +21,48 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
+# กำหนดชุดคำที่หมายถึง "ใคร/Who" ในหลายภาษา
+who_words = {
+    "ใคร",       # ไทย
+    "who",       # อังกฤษ
+    "qui",       # ฝรั่งเศส
+    "wer",       # เยอรมัน
+    "chi",       # อิตาลี
+    "quem",      # โปรตุเกส
+    "quién",     # สเปน
+    "кто",       # รัสเซีย
+    "谁",        # จีน (ตัวย่อ)
+    "誰",        # จีน (ตัวเต็ม) / ญี่ปุ่น (อ่านว่า dare)
+    "dare",      # ญี่ปุ่น (อ่านแบบโรมัน)
+    "누구",      # เกาหลี
+    "kdo",       # เช็ก / สโลวัก
+    "kto",       # โปแลนด์
+    "ki",        # ฮังการี
+    "cine",      # โรมาเนีย
+    "kuka",      # ฟินแลนด์
+    "vem",       # สวีเดน
+    "hvem",      # นอร์เวย์, เดนมาร์ก
+    "wie",       # ดัตช์
+    "ποιος",     # กรีก (ชาย)
+    "ποια",      # กรีก (หญิง)
+    "מי",        # ฮีบรู
+    "من",        # อาหรับ
+    "कौन",      # ฮินดี
+    "কে",        # เบงกาลี
+    "siapa",     # อินโดนีเซีย / มาเลย์
+    "ai",        # เวียดนาม
+    "kes",       # เอสโตเนีย
+    "kas",       # ลิทัวเนีย / ลัตเวีย
+    "hver",      # ไอซ์แลนด์
+    "ვინ",       # จอร์เจีย
+    "ով",        # อาร์เมเนีย (ออกเสียง "ov")
+    "kim",       # ตุรกี
+    "kî",        # คูร์ด
+    "obani",     # ดููลู (Zulu)
+    "tani",      # โยรูบา (Yoruba)
+    "ማን",       # อัมฮาริก (Amharic)
+}
+
 GUILD_ID = 692383463206027304
 
 # ใช้ instance เดียวจาก MyClient เท่านั้น (ปิด default help command)
@@ -51,9 +93,9 @@ async def on_message(message):
     logger.info(f"on_message: Received message from {message.author}: {message.content}")
 
     try:
-        if message.content.strip() == "ใคร":
+        if message.content.strip().lower() in who_words:
             await message.channel.send("เหมือน")
-            logger.info("ตอบ 'เหมือน' สำหรับข้อความ 'ใคร'")
+            logger.info("ตอบ 'เหมือน' สำหรับข้อความที่มีความหมายว่า 'who'")
         if message.content.strip() == "กิกี้":
             await message.channel.send("เด็กอ้วน")
             logger.info("ตอบ 'เด็กอ้วน' สำหรับข้อความ 'กิกี้'")
